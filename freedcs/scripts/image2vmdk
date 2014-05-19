@@ -1,0 +1,149 @@
+﻿#!/bin/bash
+#!/usr/bin/env bash
+arc=$1
+ip_type=$2
+ip=$3
+netmask=$4
+iface_type=$5
+# ./image2vmdk i386 1
+# ./image2vmdk i386 2 10.202.2.2 255.255.255.0 2
+# ./image2vmdk i386 2 10.202.2.2 255.255.255.0 1
+#including Configuration file
+if [ ! -f  configure.conf ]
+then
+	echo "Can not Find the configuration file";
+	exit;
+fi
+source configure.conf
+
+echo -e "Setting Up Interface Type :\n"
+function creating_NIC_TPYE(){
+		if [[ $iface_type == '1' ]]; then   # Nated mode :)
+			sed -i 's/ethernet0.connectionType.*/ethernet0.connectionType = "nat"/' vm_controller/vmwarecontroller_$arc.vmx;
+		else if [[ $iface_type == '2' ]]; then  #bridged
+			sed -i 's/ethernet0.connectionType.*/ethernet0.connectionType = "bridged"/' vm_controller/vmwarecontroller_$arc.vmx
+			else
+			sed -i 's/ethernet0.connectionType.*/ethernet0.connectionType = "hostonly"/' vm_controller/vmwarecontroller_$arc.vmx
+			fi
+			
+		fi
+	}
+creating_NIC_TPYE
+echo "Complted"
+sleep 1 
+
+BASE_DIR=`pwd`
+cat <<EOF
+*********************************************************
+	Architecture : $arc
+	IP Type 	 : $ip_type (1: DHCP, 2: Static IP)
+	IP			 : $ip
+	Netmask      : $netmask
+	Interface Type: $iface_type (1: Nated, 2: Bridged 3: hostonly)
+*********************************************************	
+EOF
+sleep 3
+
+echo " At Image to Vmdk values at input $*"
+qemu-img create -f raw myrootfs.vmdk.tmp 256M
+parted --script myrootfs.vmdk.tmp mklabel msdos
+parted --script -- myrootfs.vmdk.tmp mkpart primary ext2 0% 100%
+kpartx -av myrootfs.vmdk.tmp
+mount_device=$(kpartx -l myrootfs.vmdk.tmp | awk '{print $1}')
+echo "Mapped Device is :"$mount_device
+loop_folder="loop3"
+
+##If this drive is not present.
+if [ ! -d /mnt/$loop_folder ]
+then
+	echo "Creating new $loop_folder Folder"
+	mkdir /mnt/$loop_folder
+fi
+#unmounting if any thing is mounted before in this folder(if present).
+umount /mnt/$loop_folder/
+echo "$loop_folder Folder is present and free to use!!!"
+
+echo "mounting $mount_device to $loop_folder"
+mkfs.ext3 -q -F /dev/mapper/$mount_device -L /
+mount -o loop /dev/mapper/$mount_device /mnt/$loop_folder
+
+echo "Mounting Complete"
+
+cp ./build/$arc/$Buildroot/output/images/rootfs.tar /mnt/$loop_folder
+cd /mnt/$loop_folder
+
+tar xvf rootfs.tar
+rm rootfs.tar
+
+#add entries to configure the eth0 network interface. You would need to change this if you want static ip address.
+echo "auto eth0" >> /mnt/$loop_folder/etc/network/interfaces
+if [[ $ip_type == '1' ]]; then
+		echo "iface eth0 inet dhcp" >> /mnt/$loop_folder/etc/network/interfaces
+	else
+		echo "iface eth0 inet static" >> /mnt/$loop_folder/etc/network/interfaces
+		echo "address $ip" >> /mnt/$loop_folder/etc/network/interfaces
+		echo "netmask $netmask" >> /mnt/$loop_folder/etc/network/interfaces
+fi
+sed -i 's/start)/ start) \n \t modprobe pcnet32/' etc/init.d/S40network
+
+echo "added Interface type and IP"
+#create freedcs dir in the home folder.
+
+
+mkdir /mnt/$loop_folder/home/freedcs
+
+
+cd $BASE_DIR 
+##Adding Log Library in FreeDcs OS
+if [  -f  liblog.so ]
+	then
+		echo "liblog library found";
+		cp  liblog.so /mnt/$loop_folder/lib
+		if [  -f logd ]
+		then
+			echo "liblog library found";
+			cp  logd /mnt/$loop_folder/sbin/logd
+		fi
+		else 
+		echo "Error : logd not found"
+		## Creating Log folder
+		mkdir /mnt/$loop_folder/log
+		##Creating Default Log file
+		echo "" > /mnt/$loop_folder/log/Controller.log
+		##setting up ldconfig
+		
+		##Setting up default environment 
+		sed -i 's/\/sbin\/klogd/\/sbin\/klogd\n\tstart-stop-daemon -S -q  -m -p \/var\/run\/logd.pid --exec \/sbin\/logd/g' /mnt/$loop_folder/etc/init.d/S01logging
+		sed -i 's/-K -q -p \/var\/run\/klogd.pid/-K -q -p \/var\/run\/klogd.pid\n\tstart-stop-daemon -K -q -p \/var\/run\/logd.pid/g' /mnt/$loop_folder/etc/init.d/S01logging
+		else 
+		echo "Error : liblog.so not found"
+fi
+#######################
+cd $BASE_DIR/$freecode_folder/Controller/src/Controller
+	if [ ! -f engstatcom ]
+	then
+		echo "There is some error In Testing or setting up the engstatcom.c ";
+		exit;
+	fi
+
+cp  $BASE_DIR/$freecode_folder/Controller/src/Controller/engstatcom /mnt/$loop_folder/home/freedcs/engstatcom
+
+cd $BASE_DIR 
+echo -e "Current Directory `pwd`"
+echo -e "default=0\ntimeout=0\nroot (hd0,0)\ntitle freedcs_$arc\nkernel /boot/bzImage root=/dev/sda1" > /mnt/$loop_folder/boot/grub/menu.lst
+#cd -
+
+umount /mnt/$loop_folder/
+lsof /mnt/$loop_folder/
+kpartx -d myrootfs.vmdk.tmp
+echo -e "device (hd0) myrootfs.vmdk.tmp\nroot (hd0,0)\nsetup (hd0)" | grub --batch
+qemu-img convert -f raw myrootfs.vmdk.tmp -O vmdk myrootfs_$arc.vmdk
+if [[ $arc == 'arm' ]]
+then
+sed -i 's/ide0:0.fileName = "myrootfs.vmdk"/ide0:0.fileName = "myrootfs_arm.vmdk"/' ./vm_controller/vmwarecontroller_arm.vmx
+else
+sed -i 's/ide0:0.fileName = "myrootfs.vmdk"/ide0:0.fileName = "myrootfs_i386.vmdk"/' ./vm_controller/vmwarecontroller_i386.vmx
+fi
+
+mv myrootfs_$arc.vmdk ./vm_controller/
+rm myrootfs.vmdk.tmp

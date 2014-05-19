@@ -1,0 +1,49 @@
+.encoding = "UTF-8"
+memsize = "512"
+
+# DEFAULT SETTINGS UNDER THIS LINE
+config.version = "8"
+virtualHW.version = "4"
+
+MemAllowAutoScaleDown = "FALSE"
+MemTrimRate = "-1"
+
+uuid.location = "56 4d bd 8b a6 12 f5 80-bd 03 0a e0 89 d0 15 3f"
+uuid.bios = "56 4d bd 8b a6 12 f5 80-bd 03 0a e0 89 d0 15 3f"
+
+uuid.action = "create"
+checkpoint.vmState = "vmwarecontroller-40f2e42c.vmss"
+
+ethernet0.present = "TRUE"
+ethernet0.connectionType = "bridged"
+ethernet0.addressType = "static"
+ethernet0.generatedAddressOffset = "0"
+
+usb.present = "FALSE"
+
+extendedConfigFile = "vmwarecontroller.vmxf"
+displayName = "vmwarecontroller"
+virtualHW.productCompatibility = "hosted"
+#scsi0.present = "TRUE"
+guestOS = "ubuntu"
+cleanShutdown = "TRUE"
+replay.supported = "FALSE"
+replay.filename = ""
+vmotion.checkpointFBSize = "33554432"
+softPowerOff = "FALSE"
+ethernet0.linkStatePropagation.enable = "TRUE"
+tools.syncTime = "FALSE"
+
+#scsi0:1.present = "FALSE"
+
+ide0:0.fileName = "myrootfs.vmdk"
+ide0:0.present = "TRUE"
+ide0:0.deviceType = "disk"
+#ide0:0.deviceType = "cdrom-image"
+ide0:0.mode = "persistent"
+ide0:0.redo = ""
+ide0:0.writeThrough = "FALSE"
+ide0:0.startConnected = "TRUE"
+ethernet0.address = "00:50:56:2F:A3:2B"
+sound.present = "FALSE"
+floppy0.present = "FALSE"
