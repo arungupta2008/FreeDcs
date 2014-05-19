@@ -16,3 +16,7 @@ Flexibility is important too. FreeDCS is being designed to be used as a single c
 
 Robustness:
 Nobody wants to use a system that fails and behaves erratically. So, FreeDCS will be tested exaustivelly by the user comunity to behave as espected in all the ocations.
+
+
+
+I am contributing in System Architecture, Building tiny FreeDCS OS and Logging Part 
