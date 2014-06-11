@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 #!/usr/bin/env bash
 arc=$1
 ip_type=$2
@@ -103,9 +103,11 @@ if [  -f  liblog.so ]
 		then
 			echo "liblog library found";
 			cp  logd /mnt/$loop_folder/sbin/logd
-		fi
 		else 
-		echo "Error : logd not found"
+			echo "Error : logd not found"
+			sleep 3
+			exit;
+		fi
 		## Creating Log folder
 		mkdir /mnt/$loop_folder/log
 		##Creating Default Log file
@@ -115,8 +117,9 @@ if [  -f  liblog.so ]
 		##Setting up default environment 
 		sed -i 's/\/sbin\/klogd/\/sbin\/klogd\n\tstart-stop-daemon -S -q  -m -p \/var\/run\/logd.pid --exec \/sbin\/logd/g' /mnt/$loop_folder/etc/init.d/S01logging
 		sed -i 's/-K -q -p \/var\/run\/klogd.pid/-K -q -p \/var\/run\/klogd.pid\n\tstart-stop-daemon -K -q -p \/var\/run\/logd.pid/g' /mnt/$loop_folder/etc/init.d/S01logging
-		else 
+	else 
 		echo "Error : liblog.so not found"
+		exit;
 fi
 #######################
 cd $BASE_DIR/$freecode_folder/Controller/src/Controller
