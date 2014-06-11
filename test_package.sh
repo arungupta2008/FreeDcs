@@ -6,8 +6,21 @@ DEPENDENCIES="sed  gettext  libncurses5-dev  texinfo patch bison flex openssl li
 PKGSTOINSTALL=""
 PKGFINALNOTINS=""
 case_=0
-test_packages(){
 
+function warning(){
+cat <<EOF
+**************************************************************
+Note : Please this package tester comes with no guarantee may 
+be some packages goes undetected but actually these packages 
+are present in your machine.
+Bacause this was implemented for every linux box
+**************************************************************
+EOF
+sleep 2
+}
+test_packages(){
+##Calling warning function.	
+warning;
 #for ((i=0; i /dev/null; do
 for i in $@; do
 	if command -v dpkg > /dev/null; then
