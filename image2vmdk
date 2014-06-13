@@ -133,7 +133,8 @@ cp  $BASE_DIR/$freecode_folder/Controller/src/Controller/engstatcom /mnt/$loop_f
 
 cd $BASE_DIR 
 echo -e "Current Directory `pwd`"
-echo -e "default=0\ntimeout=0\nroot (hd0,0)\ntitle freedcs_$arc\nkernel /boot/bzImage root=/dev/sda1" > /mnt/$loop_folder/boot/grub/menu.lst
+echo -e "default=0\ntimeout=0\nroot (hd0,0)\ntitle FreeDcs_v$OS_Version_$arc\nkernel /boot/bzImage root=/dev/sda1" > /mnt/$loop_folder/boot/grub/menu.lst
+##Read This is Grub-Legacy(GRUB not GRUB 2)
 #cd -
 
 umount /mnt/$loop_folder/
