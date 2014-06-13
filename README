@@ -1,0 +1,63 @@
+
+Introduction:
+=================
+
+Hello and thanks for your interest in FreeDCS !
+
+FreeDCS is an Open Source effort of individuals all over the world to make a great 
+Distributed Control System that's if fully capable of running control algorithms programmed
+in a graphical environment.
+
+Those control algorithms are individually compiled in single tasks and sent to a
+board computer (from now on, controller) and executed in an RTOS environment.
+
+This package contains the build environment for the controller and is mainly targeted to developers
+working on improving the controller code.
+
+Please continue reading to know more about the directory layout used and how to launch the build scripts.
+
+Thanks for helping us !
+The FreeDCS team.
+
+
+
+Directory layout:
+=================
+
+build:
+	This dir contains the buildroot build environment. It's a set of scripts that will generate a linux
+	kernel with all the tools needed as well as the toolchain for the selected architecture and then compile
+	everything to generate a rootfs.img file.
+	That file will be the one you load to your target controller or will 
+	be used to generate a vmware image if you state that when launching the build_all.sh script.
+
+common:
+	Contains configuration files for various architectures to be used by buildroot and the linux kernel config.
+
+freedcs-code:
+	At firts this dir will not exist, it will be downloaded from the project website to be as current as possible
+	When it's downloaded for the first time, then it will not be downloaded again as long as the dir exists.
+	This is to protect the developer if he/she makes changes to the code and this script could overwrite it 
+	with a default project when the script is launched.
+
+vm_controller:
+	This dir contains the configuration file for vmware player. If the developer launches the build_all.sh
+	script indicating that he/she wants to generate a vmware image, it will be located here once built.
+	The "vmwarecontroller.vmx" file could be used to launch the vm.
+
+
+How to launch the build script:
+================================
+
+sudo build_all.sh
+
+This script will:
+- Ask for options to generate your Controller Build Environment.
+- Download if not already downloaded all the packages to build the rootfs.
+- Generate a rootfs and vmware image if told to so so, with IP address specified or DHCP
+- The toolchain will be generated for ARM or x86 CPU's as requested.
+- The code for the controller will be downloaded from the project's website and compiled.
+- The binaries will be copied to the /home/freedcs of the target board or vmware image.
+- Later on you could update the binaries to the controller via ssh if you make changes to the code and compile again.
+
+
