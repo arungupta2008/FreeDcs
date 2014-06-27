@@ -1,0 +1,2 @@
+sed -i 's/\/sbin\/klogd/\/sbin\/klogd\n\tstart-stop-daemon -S -q  -m -p \/var\/run\/logd.pid --exec \/sbin\/logd/g' S01logging
+sed  -i 's/-K -q -p \/var\/run\/klogd.pid/-K -q -p \/var\/run\/klogd.pid\n\tstart-stop-daemon -K -q -p \/var\/run\/logd.pid/g' S01logging

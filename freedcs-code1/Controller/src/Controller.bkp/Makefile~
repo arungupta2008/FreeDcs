@@ -1,0 +1,119 @@
+
+#arm
+#prefix := $(shell ../../../../build/ARM/buildroot-2011.11/output/target/usr/xenomai/usr/bin/xeno-config --prefix)
+#i386
+prefix := $(shell ../../../../build/i386/buildroot-2011.11/output/target/usr/xenomai/usr/bin/xeno-config --prefix)
+
+#prefix := $(shell xeno-config --prefix)
+
+ifeq ($(prefix),)
+$(error Please add <xeno-install>/bin to your PATH variable)
+endif
+
+OBJS = socket_functions.o statcom.o
+
+#ARM
+#XENO=../../../../build/ARM/buildroot-2011.11/output/target/usr/xenomai/usr
+#i386
+XENO=../../../../build/i386/buildroot-2011.11/output/target/usr/xenomai/usr
+
+
+LXRT_CFLAGS= -Wcast-align -g -W -Wall -isystem $(XENO)/include/xenomai -isystem $(XENO)/include/xenomai/rtdm -D_GNU_SOURCE -D_REENTRANT -pipe -D__XENO__
+#LXRT_LDFLAGS= -lnative -L../../../../build/ARM/buildroot-2011.11/output/target/usr/lib -lxenomai -lpthread -lrt
+LXRT_LDFLAGS= -lnative -L../../../../build/i386/buildroot-2011.11/output/target/usr/lib -lxenomai -lpthread -lrt
+
+#ARM
+#CC = ../../../../build/ARM/buildroot-2011.11/output/host/usr/bin/arm-unknown-linux-uclibcgnueabi-gcc #$(shell xeno-config --cc)
+#i386
+CC = ../../../../build/i386/buildroot-2011.11/output/host/usr/bin/i686-unknown-linux-uclibc-gcc #$(shell xeno-config --cc)
+
+#-I$(XENO)/include/xenomai/native
+
+#CC = $(shell xeno-config --cc)
+#LXRT_CFLAGS = $(shell xeno-config --skin=native --cflags)
+#LXRT_LDFLAGS = $(shell xeno-config --skin=native --ldflags)
+#CLFAGS_NOT_USED =
+CFLAGS = -Wall -pedantic -Wold-style-definition -Wextra  -Wbad-function-cast -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wconversion -Wfloat-equal -Wformat=2 -Winit-self -Winline -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstack-protector -Wswitch-default -Wswitch-enum -Winvalid-pch -Wstrict-aliasing=2 -Wunknown-pragmas -Wundef -Wunsafe-loop-optimizations -Wpointer-arith -Wcast-qual -Wwrite-strings -Winline -Wvolatile-register-var -Wno-unused-parameter -Wno-variadic-macros
+
+
+all: engstatcom
+default: engstatcom
+test: Xenomai_test1 Xenomai_test2 Xenomai_test3 Xenomai_test4 Xenomai_Semaphore Xenomai_Priority_Sceduling Xenomai_Priority_Sceduling_1
+timer: timer
+pr:pr
+engstatcom: engstatcom.o statcom.o $(OBJS)
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o engstatcom engstatcom.o $(OBJS) -rdynamic -lcrypto -lssl
+
+engstatcom.o: engstatcom.c
+	$(CC) $(LXRT_CFLAGS) $(CFLAGS) -c $<
+
+statcom.o: statcom.c
+	$(CC) $(LXRT_CFLAGS) $(CFLAGS) -c $<
+
+socket_functions.o: socket_functions.c
+	$(CC) $(LXRT_CFLAGS) $(CFLAGS) -c $<
+
+trivial-periodic.o: trivial-periodic.c
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -c $<
+	
+pr: trivial-periodic.o
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o $@ $<  -rdynamic -lcrypto -lssl
+		
+timer.o: timer.c
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -c $<
+		
+timer: timer.o
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o $@ $<  -rdynamic -lcrypto -lssl
+			
+Xenomai_test1.o: Xenomai_test1.c
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -c $<
+
+Xenomai_test1: Xenomai_test1.o
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o $@ $<  -rdynamic -lcrypto -lssl
+	
+Xenomai_test2.o: Xenomai_test2.c
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -c $<
+
+Xenomai_test2: Xenomai_test2.o
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o $@ $<  -rdynamic -lcrypto -lssl	
+
+Xenomai_test3.o: Xenomai_test3.c
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -c $<
+
+Xenomai_test3: Xenomai_test3.o
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o $@ $<  -rdynamic -lcrypto -lssl	
+
+Xenomai_test4.o: Xenomai_test4.c
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -c $<
+
+Xenomai_test4: Xenomai_test4.o
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o $@ $<  -rdynamic -lcrypto -lssl	
+
+Xenomai_Semaphore.o: Xenomai_Semaphore.c
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -c $<
+		
+Xenomai_Semaphore: Xenomai_Semaphore.o
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o $@ $<  -rdynamic -lcrypto -lssl	
+Xenomai_Priority_Sceduling.o: Xenomai_Priority_Sceduling.c
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -c $<
+		
+Xenomai_Priority_Sceduling: Xenomai_Priority_Sceduling.o
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o $@ $<  -rdynamic -lcrypto -lssl	
+
+Xenomai_Semaphore_1: Xenomai_Semaphore_1.o
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o $@ $<  -rdynamic -lcrypto -lssl	
+Xenomai_Priority_Sceduling_1.o: Xenomai_Priority_Sceduling_1.c
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -c $<
+		
+Xenomai_Priority_Sceduling_1: Xenomai_Priority_Sceduling_1.o
+	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o $@ $<  -rdynamic -lcrypto -lssl	
+
+clean:
+clean:
+	rm -f *.o engstatcom Xenomai_test1 timer pr Xenomai_test3 Xenomai_test2 Xenomai_test4 Xenomai_Priority_Sceduling Xenomai_Semaphore
+.PHONY: clean
+
+
+
+
+

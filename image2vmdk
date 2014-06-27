@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 #!/usr/bin/env bash
 arc=$1
 ip_type=$2
