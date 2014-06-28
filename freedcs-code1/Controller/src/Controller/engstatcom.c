@@ -27,30 +27,108 @@
 
 int main(void);
 int validate_engstation(SSL *ssl);
+//For forking the parent process 
+static void skeleton_daemon();
+
+
+
 
 int main(void)
 {
-	char module_name[] = "engstatcom";
-	//Logging init 
-	rt_print_auto_init(1); // Please don't comment this 
-	log_message(LG_INFO, "For Module %s logging working for Linux Logging ",module_name);
-	rt_log_message(LG_INFO, "For Module %s logging working for Rt_logging",module_name);
-	/*openlog("engstatcom", 0, LOG_USER);
-
-	shmbuf = GetSharedMemory(1000, module_name); //size=1000
-    assertsyslog(shmbuf);
-
-	memset(shmbuf,0,1000);
-	cpheader = (struct cprog_header*) shmbuf;
-	cpheader->debug_level = 0;*/
-
-	statcom_main(ENGSTATION_SERVER_PORT, MAX_ENGSTATION_CLIENTS, module_name, &handle_engstation_commads);
-
-	return 0; 	/*we should never reach here !*/
+	//For making engstatcom a daemon 
+	skeleton_daemon();
+	pid_t get_pid = getpid();
+	char str[6]; // Max PID is 5 only
+	sprintf(str, "%d", get_pid);
+	//PID of daemon is written in /var/run/engstatcom.pid
+	int pid_file = open("/var/run/engstatcom.pid", O_CREAT | O_RDWR, 0666);
+	write(pid_file,str, strlen(str));
+	int rc = flock(pid_file, LOCK_EX | LOCK_NB);
+	if(rc) {
+		if(EWOULDBLOCK == errno)
+        printf("engstatcom already running"); // another instance is running
+        exit(1);
+	}
+	else { 
+		for(;;){
+			char module_name[] = "engstatcom";
+			//Rt_Logging init 
+			rt_print_auto_init(1); // Please don't comment this 
+			log_message(LG_INFO, "For Module %s logging working for Linux Logging ",module_name);
+			rt_log_message(LG_INFO, "For Module %s logging working for Rt_logging",module_name);
+			/*openlog("engstatcom", 0, LOG_USER);
+		
+			shmbuf = GetSharedMemory(1000, module_name); //size=1000
+			assertsyslog(shmbuf);
+		
+			memset(shmbuf,0,1000);
+			cpheader = (struct cprog_header*) shmbuf;
+			cpheader->debug_level = 0;*/
+		
+			statcom_main(ENGSTATION_SERVER_PORT, MAX_ENGSTATION_CLIENTS, module_name, &handle_engstation_commads);
+			}
+			return 0; 	/*we should never reach here !*/
+		}
 }
+/*
+ * This function forks the engstatcom and parent pid is killed and child pid is retained
+ * */
+#define EXIT_FAILURE_  log_message(LG_MSG, "Error in forking of engstatcom"); exit(1);
+#define EXIT_FAILURE 1
+#define EXIT_SUCCESS 0 
+static void skeleton_daemon(){
+    pid_t pid;
 
+    /* Fork off the parent process */
+    pid = fork();
 
+    /* An error occurred */
+    if (pid < 0){
+		EXIT_FAILURE_
+        //exit(EXIT_FAILURE);
+	}
 
+    /* Success: Let the parent terminate */
+    if (pid > 0)
+        exit(EXIT_SUCCESS);
+
+    /* On success: The child process becomes session leader */
+    if (setsid() < 0)
+        exit(EXIT_FAILURE);
+
+    /* Catch, ignore and handle signals */
+    //TODO: Implement a working signal handler */
+    signal(SIGCHLD, SIG_IGN);
+    signal(SIGHUP, SIG_IGN);
+
+    /* Fork off for the second time*/
+    pid = fork();
+
+    /* An error occurred */
+    if (pid < 0)
+        exit(EXIT_FAILURE);
+
+    /* Success: Let the parent terminate */
+    if (pid > 0)
+        exit(EXIT_SUCCESS);
+
+    /* Set new file permissions */
+    umask(0);
+
+    /* Change the working directory to the root directory */
+    /* or another appropriated directory */
+	//Change Directory
+    //If we cant find the directory we exit with failure.
+    if((chdir("/home/freedcs")) < 0) { exit(EXIT_FAILURE); }
+
+    /* Close all open file descriptors */
+    //int x;
+    //for (x = sysconf(_SC_OPEN_MAX); x>0; x--)
+    //{
+    //    close (x);
+    //}
+   
+}
 
 /** \brief This is a callback function called by statcom_main() once the SSL connection has been established.
            This function routes the commands based on the command number given in the first field of the packet.
@@ -69,7 +147,7 @@ int handle_engstation_commads(SSL *ssl, int connection_id)
 
 	char answer[100];
 
-	printf("at first in the handle function\n");
+	log_message(LG_INFO ,"at first in the handle function");
 
     assertsyslog(connection_id < 9999999);
 	sprintf(task_name, "ENGSTCOM%d", connection_id);
@@ -78,7 +156,7 @@ int handle_engstation_commads(SSL *ssl, int connection_id)
 
 	makerealtime(task_name);
 
-    printf("after some code in the handle function\n");
+    log_message(LG_INFO ,"after some code in the handle function");
 
 	/*while(!exit)
 	{*/
@@ -88,7 +166,7 @@ int handle_engstation_commads(SSL *ssl, int connection_id)
              sprintf(answer, "The client sent the command=%d", command);
         }
         else
-            printf("SSL variable is NULL\n");
+            log_message(LG_INFO ,"SSL variable is NULL");
 
         SSL_write(ssl, answer, (int)strlen(answer));
 

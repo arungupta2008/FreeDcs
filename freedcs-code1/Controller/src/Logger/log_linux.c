@@ -146,7 +146,7 @@ _log_dump(char *fmt, ...)
 // Checks Either Log file opened or not.
 void linux_log_check(){
 	if (log_file_fd == STDERR_FILENO) {
-		printf("Log File not opened. Opening Log file \nNote: Here Standard stdout file is opened  \n");
+		//printf("Log File not opened. Opening Log file \nNote: Here Standard stdout file is opened  \n");
 			if(open_log_file(log_file) > STDERR_FILENO){
 				log_message(LG_MSG, "linux_logging started");
 			}else{

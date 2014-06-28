@@ -11,7 +11,7 @@ int
 open_rt_file(const char *path){
 	rt_file = fopen (path,"a+");
 	//printf("Opened file for writing %s\t%s\n",path,rt_file);
-	rt_log_message(LG_MSG, "rt_logging working");
+	//rt_log_message(LG_MSG, "rt_logging working");
 	if (rt_file == NULL) {
         rt_printf("Error while opening Log file %s (%d)\n",path,errno);
         return FAIL;

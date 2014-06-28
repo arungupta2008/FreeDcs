@@ -117,7 +117,7 @@ void LoadCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile)
 
     if (!SSL_CTX_check_private_key(ctx))
     {
-        fprintf(stderr, "Private key does not match the public certificate\n");
+        log_message(LG_ERR, "Private key does not match the public certificate");
         abort();
     }
 
@@ -135,7 +135,7 @@ int validate_client_server_cert(SSL_CTX* ctx, X509 *client_cert, const char *key
 		        abort();
 		}
 		else
-			printf("SSL_CTX_use_certificate OK\n");
+			log_message(LG_INFO , "SSL_CTX_use_certificate");
 
 
 		if (SSL_CTX_use_PrivateKey_file(ctx, keyfile, SSL_FILETYPE_PEM) <= 0)
@@ -144,12 +144,12 @@ int validate_client_server_cert(SSL_CTX* ctx, X509 *client_cert, const char *key
         		abort();
     		}
 		else
-			printf("SSL_CTX_use_PrivateKey_file OK\n");
+			log_message(LG_INFO ,"SSL_CTX_use_PrivateKey_file OK");
 
 		/* verify private key between client certificate and stored private key to see if they match*/
 		if (!SSL_CTX_check_private_key(ctx))
 		{
-        		fprintf(stderr, "Private key of server does not match the public client certificate\n");
+        		log_message(LG_ERR , "Private key of server does not match the public client certificate");
 		        abort();
 	   	}
 		return 0;
@@ -192,17 +192,17 @@ void ShowCerts(SSL* ssl)
     cert = SSL_get_peer_certificate(ssl);
     if ( cert != NULL )
     {
-        printf("Client certificates:\n");
+        log_message(LG_INFO ,"Client certificates:");
         line = X509_NAME_oneline(X509_get_subject_name(cert), 0, 0);
         log_message(LG_INFO, "Subject: %s",line);
         free(line);
         line = X509_NAME_oneline(X509_get_issuer_name(cert), 0, 0);
-        log_message(LG_INFO, "Issuer: %s\n",line);
+        log_message(LG_INFO, "Issuer: %s",line);
         free(line);
         X509_free(cert);
     }
     else
-        printf("No certificates.\n");
+        log_message(LG_ERR ,"No certificates.");
 }
 
 
@@ -261,7 +261,7 @@ int create_socket_and_listen(int server_port, int setupdone )
             return -1;
         }
 
-        log_message(LG_INFO, "Socket created! Waiting for a TCP connection\n");
+        log_message(LG_INFO, "Socket created! Waiting for a TCP connection");
 
         clientAddressLength = sizeof(clientAddress);
     }
@@ -296,15 +296,12 @@ SSL* do_ssl_handshake(SSL_CTX *ctx, int connectSocket)
     {
         ERR_print_errors_fp(stderr);
         return NULL;
-    }
-    else
-    {
+    }else{
         error = validate_client_server_cert(ctx, SSL_get_peer_certificate(ssl), "server.key");
         if(error == 0)
-            printf("client certificate and server key matches !\n");
-        else
-        {
-             printf("client certificate and server key doesnt match !\n");
+            {log_message(LG_INFO , "client certificate and server key matches !");
+        }else{
+             log_message(LG_ERR ,"client certificate and server key doesnt match !");
              return NULL;
         }
     }
