@@ -104,6 +104,10 @@ int main(int count, char *strings[])
     char *hostname, *portnum;
     char CertFile[] = "server.crt";
     char KeyFile[] = "server.key";
+    if(count<3){
+		printf("<usage> : <IP> <Port> <Command>\n");
+		exit(1);
+	}
     uint32_t command = atoi(strings[3]);
 
     SSL_library_init();
