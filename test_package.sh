@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #!/bin/bash
 # What dependencies are missing?
-DEPENDENCIES="sed  gettext  libncurses5-dev  texinfo patch bison flex openssl libssl-dev gcc sysvbanner figlet toilet grub tar"
+DEPENDENCIES="sed  gettext  libncurses5-dev  texinfo patch bison flex openssl libssl-dev gcc sysvbanner figlet toilet grub tar bc kpartx grub qemu-img make svn bzip2 g++ unzip subversion rsync lsof fakeroot parted kpartx"
 #DEPENDENCIES=(sed svn)
 PKGSTOINSTALL=""
 PKGFINALNOTINS=""
