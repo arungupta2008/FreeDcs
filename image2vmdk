@@ -42,9 +42,10 @@ cat <<EOF
 	Interface Type: $iface_type (1: Nated, 2: Bridged 3: hostonly)
 *********************************************************	
 EOF
+echo " At Image to Vmdk values at input $*"
 sleep 3
 
-echo " At Image to Vmdk values at input $*"
+
 qemu-img create -f raw myrootfs.vmdk.tmp 256M
 parted --script myrootfs.vmdk.tmp mklabel msdos
 parted --script -- myrootfs.vmdk.tmp mkpart primary ext2 0% 100%

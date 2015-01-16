@@ -1,0 +1,42 @@
+Known Issues 
+
+
+If GCC get's Failed
+
+texinfo 5.0. Version 
+
+Our GCC is old and it expects textinfo version 4.13b to get installed. Ubuntu(13.04) comes with texinfo 4.13b but upcoming versions of Ubuntu will be having the 5.0.1 < versions.
+So our creation of disk will get failed.
+
+Solutions 
+
+1. Downgrade the texinfo which is installed in our machine. 
+2. Use the patch when system get fails. (010-documentation.patch)  https://dev.openwrt.org/changeset/35807
+3. Make a virtual environment. (Using Docker i am working on it learning things)
+
+
+
+
+
+
+
+goto  /home/arun/freedcs/build/i386/buildroot-2011.11/output/build
+
+Failed (http://gnu-autoconf.7623.n7.nabble.com/compile-error-conftest-c-14625-must-be-after-defmac-to-use-defmacx-td18843.html)
+In host-autoconf due to texinfo added patch (autocong.texi.2.65.patch)
+
+
+
+
+
+
+/home/arun/freedcs/build/i386/buildroot-2011.11/output/build/host-m4-1.4.15/lib/
+
+
+Failed 
+./stdio.h:456:1: error: 'gets' undeclared here (not in a function)
+ _GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");
+ ^
+Please comment on that line then there will be no problem.
+
+
