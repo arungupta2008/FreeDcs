@@ -84,7 +84,7 @@ struct used_port
 uint16_t get_new_port(int connectSocket, struct used_port *ports);
 void makerealtime(char *task_name);
 int send_message(SSL* ssl, uint16_t err);
-int statcom_main(uint16_t server_port, uint16_t max_clients, char* module_name, int (*ptr_cmd_handler_func) (SSL*,int));
+int statcom_main(uint16_t server_port, uint16_t max_clients, char* module_name, int (*ptr_cmd_handler_func) (SSL*,char *));
 void child_terminated(void);
 int release_dead_connection_entry(int child_pid, struct used_port *ports);
 int closeconnection(int connectSocket, SSL* ssl, SSL_CTX* ctx, char *module_name);

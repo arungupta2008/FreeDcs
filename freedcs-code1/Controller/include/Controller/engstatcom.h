@@ -24,7 +24,7 @@
 #include "statcom.h"
 
 
-int handle_engstation_commads(SSL*, int);
+int handle_engstation_commads(SSL*, char *);
 
 
 #endif

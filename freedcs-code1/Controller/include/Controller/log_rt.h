@@ -24,7 +24,9 @@ extern int rt_log_level;
 extern FILE *rt_file;
 int open_rt_file(const char *path);
 int close_rt_file(FILE *rt_log_internal);
+extern void set_log_ident_rt(const char *ident);
 void _rt_log_message(int, char*, ...) __attribute__((format(printf, 2, 3)));
+extern void __rt_log_message(FILE *rt_file_ ,int level, char *fmt, va_list args);
 #define rt_log_message(level, arg...) \
 	(level) > rt_log_level ? (void)0: _rt_log_message(level, arg);
 #define assertsyslog(cond) if(!(cond)) {rt_log_message(LG_ERR, "assertion failed (%s) in file %s line %d\n", #cond, __FILE__, __LINE__); exit(1);}	

@@ -38,6 +38,101 @@ int send_message(SSL *ssl, uint16_t err)
 	return 0;
 }
 
+// IP address of station 
+char *Log_to_IP = NULL;
+char *Client_logging_path = "/log/client_log/";
+FILE *Log_File_Pointer = NULL;
+
+void init_Client_logging(char *Client_logging_path_ , char *Log_to_IP_ ){
+			// Please don't try to include if condition here for Optimization. 
+			// bacause Client_Logger everytime re-creates the New file.
+			char buf[256];
+			snprintf(buf, sizeof buf, "%s/%s", Client_logging_path,Log_to_IP);
+			Log_File_Pointer = fopen(buf, "ab+");
+	}
+	
+void log_to_client_linux(char *Log_to_IP_,int level,char *fmt, va_list args){
+		init_Client_logging(Client_logging_path,Log_to_IP);
+		int log_file_dis = fileno(Log_File_Pointer);
+		__log_message(log_file_dis,level,fmt,args);
+	}
+void log_message_(int level, char *fmt, ...){
+	va_list args;
+	log_message(LG_INFO,"At log_message_");
+ 	va_start(args, fmt);
+	if(Log_to_IP == NULL){
+		//Normal Log without client
+		_log_message(level,fmt,args);
+		log_message(LG_INFO,"At log_message_ at if");
+		// this above mentioned FD is 
+		}else{
+			log_message(LG_INFO,"At log_message_at else");
+			//Log to client also 
+			log_to_client_linux(Log_to_IP, level,fmt,args);
+			//Call Log File 
+			_log_message(level,fmt,args);
+		}
+	va_end(args);
+	Log_File_Pointer = NULL;	
+	}
+void log_to_client_rt(char *Log_to_IP_,int level,char *fmt, va_list args){
+		init_Client_logging(Client_logging_path,Log_to_IP);
+		__log_message(Log_File_Pointer,level,fmt,args);
+	}
+		
+void rt_log_message_(int level, char *fmt, ...){
+	va_list args;
+ 	va_start(args, fmt);
+	if(Log_to_IP == NULL){
+		//Normal Log without client
+		_rt_log_message(level,fmt,args);
+		// this above mentioned FD is 
+		}else{
+			//Log to client also 
+			log_to_client_rt(Log_to_IP, level,fmt,args);
+			//Call Log File 
+			_log_message(level,fmt,args);
+		}
+	va_end(args);
+	Log_File_Pointer = NULL;	
+	}		
+//
+///*
+// * Need some pointer to write to connection !!! These are default pointers. 
+// * */
+// // Before SSL connection
+// int LogSocket=0;
+// // after SSL connection
+// SSL *LogSSL = NULL;
+// 
+///**
+// * \brief 
+// * */ 
+//void log_message(int level, char *fmt, ...){
+//	va_list argp;
+//	va_start(args, fmt);
+//	char *msg;
+//	if(LogSSL != NULL){
+//		vsnprintf(msg, 1024, fmt, args);
+//		SSL_write(LogSSL, msg, sizeof(msg));   /* encrypt & send message */		
+//	}else if (LogSocket != 0){
+//			
+//			}
+//	__log_message(level ,fmt, args);
+//	va_end(argp);
+//	}
+//void rt_log_message(int level, char *fmt, ...){
+//	if(LogSSL != NULL){
+//		vsnprintf(msg, 1024, fmt, args);
+//		SSL_write(LogSSL, msg, sizeof(msg));   /* encrypt & send message */		
+//	}else if (LogSocket != 0){
+//			
+//			}
+//	va_list args;
+//	va_start(args, fmt);
+//	__rt_log_message(level ,fmt, args);
+//	va_end(argp);
+//	}	
 
 /** \brief child_terminated() function is connected via a signal to the termination of a child process.
  *        The function releases the connection in the master connection's table kept by the parent.
@@ -262,13 +357,16 @@ int create_socket_and_listen(int server_port, int setupdone )
         }
 
         log_message(LG_INFO, "Socket created! Waiting for a TCP connection");
-
+        
         clientAddressLength = sizeof(clientAddress);
     }
 
 
     connectSocket = accept(mysocket, (struct sockaddr *) &clientAddress, &clientAddressLength);  /* accept connection as usual */
-    log_message("Connection: %s:%d",inet_ntoa(clientAddress.sin_addr), ntohs(clientAddress.sin_port));
+    Log_to_IP = inet_ntoa(clientAddress.sin_addr);
+    log_message(LG_INFO,"Connection: %s:%d",Log_to_IP,ntohs(clientAddress.sin_port));
+    log_message(LG_INFO,"Socket Value : %d",connectSocket);
+    //init_Client_logging();
 
 	if (connectSocket < 0)
 	{
@@ -376,7 +474,8 @@ int create_socket_connect_verify(uint16_t server_port, uint16_t max_clients, cha
          log_message(LG_ERR, "Cannot create socket to listen.");
          return ERROR;
     }
-
+	// Getting Socket connection after connection created For Logging 
+	//LogSocket  = connectSocket;
     if(verify_max_clients(max_clients, connectSocket, module_name) != OK)
     {
          log_message(LG_ERR, "verify_max_clients returned not OK.");
@@ -392,6 +491,12 @@ int create_socket_connect_verify(uint16_t server_port, uint16_t max_clients, cha
     return connectSocket;
 }
 
+
+// To change indentation name.
+void set_indent(char *indent_name){
+		set_log_ident(indent_name);
+		set_log_ident_rt(indent_name);
+	}
 /** \brief
  *
  * \param server_port uint16_t
@@ -406,7 +511,7 @@ int create_socket_connect_verify(uint16_t server_port, uint16_t max_clients, cha
        - Check return values and fail accordingly.
 */
 
-int statcom_main(uint16_t server_port, uint16_t max_clients, char* module_name, int (*call_command_handler_function) (SSL *, int))
+int statcom_main(uint16_t server_port, uint16_t max_clients, char* module_name, int (*call_command_handler_function) (SSL *, char *))
 {
 	int 	    setupdone=0, connection_id, connectSocket;
 	pid_t 	    pid;
@@ -420,9 +525,22 @@ int statcom_main(uint16_t server_port, uint16_t max_clients, char* module_name, 
 
 	while(1) /*while loop to serve many connections. When one connection arrives, a new process is forked to handle it.*/
 	{         /*and the parent process comes here again to continue listening.*/
-        if((connectSocket = create_socket_connect_verify(server_port, max_clients, module_name, setupdone, &connection_id)) == ERROR)
+        if((connectSocket = create_socket_connect_verify(server_port, max_clients, module_name, setupdone, &connection_id)) == ERROR){
             goto error;
-
+		}
+		/*
+		 * Creating Task name for logging
+		 * */
+		char task_name[16];
+		char syslogstring[100];
+		assertsyslog(connection_id < 9999999);
+		sprintf(task_name, "ENGSTCOM%d", connection_id);
+		sprintf(syslogstring, "taskname = %s", task_name);
+		log_message(LG_INFO, "%s", syslogstring);
+		//char sendBuff[1025];  
+		//memset(sendBuff, '\0', sizeof(sendBuff));
+		//strcpy(sendBuff, "Message from server");
+		//write(connectSocket, sendBuff, strlen(sendBuff));
         switch(pid = fork()) /* here a new child process is created and the parent continues.*/
         {
             case -1:/*something went wrong..*/
@@ -433,9 +551,17 @@ int statcom_main(uint16_t server_port, uint16_t max_clients, char* module_name, 
                 signal(SIGCHLD,SIG_IGN); /* to keep track of when a child is terminated.*/
                 signal(SIGCLD,SIG_IGN); /* to keep track of when a child is terminated.*/
 
-                if((ssl = do_ssl_handshake(ctx, connectSocket)) != NULL) /* if OK call function to handle engstation comms.*/
-                    call_command_handler_function(ssl, connection_id); /* this function don't return until the station ends the connection.*/
-
+                if((ssl = do_ssl_handshake(ctx, connectSocket)) != NULL){ /* if OK call function to handle engstation comms.*/
+                set_indent(task_name);
+                SSL_write(ssl, "SSL Hnadshake Completed", sizeof("SSL Hnadshake Completed"));   /* encrypt & send message */
+                log_message_(LG_ERR, "Parent saving PID=%d of child in slot=%d", pid,connection_id );
+                log_message_(LG_ERR, "Parent saving PID=%d of child in slot=%d", pid,connection_id );
+                
+                log_message(LG_ERR, "Parent saving PID=%d of child in slot=%d", pid,connection_id );
+                // After SSL connection created for Logging 
+                //LogSSL = ssl;
+                    call_command_handler_function(ssl, task_name); /* this function don't return until the station ends the connection.*/
+				}
                 closeconnection(connectSocket, ssl, ctx, module_name); /* we're done handling this connection, the client will exit now.*/
                 exit(0);	/*when finished handling comms, we kill the child.*/
                 break;

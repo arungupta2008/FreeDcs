@@ -64,7 +64,6 @@ int main(void)
 			memset(shmbuf,0,1000);
 			cpheader = (struct cprog_header*) shmbuf;
 			cpheader->debug_level = 0;*/
-		
 			statcom_main(ENGSTATION_SERVER_PORT, MAX_ENGSTATION_CLIENTS, module_name, &handle_engstation_commads);
 			}
 			return 0; 	/*we should never reach here !*/
@@ -139,21 +138,13 @@ static void skeleton_daemon(){
  * \return int This function returns when the client send the EXIT command. It could return errors through this number.
  *
  */
-int handle_engstation_commads(SSL *ssl, int connection_id)
+int handle_engstation_commads(SSL *ssl, char *task_name)
 {
-	char task_name[16];
-	char syslogstring[100];
 	uint32_t command=0;
 
 	char answer[100];
 
 	log_message(LG_INFO ,"at first in the handle function");
-
-    assertsyslog(connection_id < 9999999);
-	sprintf(task_name, "ENGSTCOM%d", connection_id);
-	sprintf(syslogstring, "taskname = %s", task_name);
-	log_message(LG_INFO, "%s", syslogstring);
-
 	makerealtime(task_name);
 
     log_message(LG_INFO ,"after some code in the handle function");

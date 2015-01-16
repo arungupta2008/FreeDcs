@@ -4,6 +4,11 @@ typedef unsigned uint;
 typedef unsigned long long uint64;
 
 
+// Set indentation 
+void set_log_ident_rt(const char *ident){
+	log_ident_rt = ident;
+	}
+
 /*
  * Modified standard because it does not use tm_milisec 
  * */
@@ -46,14 +51,15 @@ void log_check(){
 	//printf("At Log check \n");
 	if (rt_file == NULL) {
 		rt_printf("Log File not opened. Opening Log file \n");
-			if(open_rt_file(log_file_rt) == SUCCESS){
+			if(! open_rt_file(log_file_rt) == SUCCESS){
+				rt_printf("Failed To open Log file\n");
 				//printf(" At success rt_logging started\n ");
 				//rt_printf("At success rt_logging started\n");
-				rt_log_message(LG_MSG, "rt_logging started");
-			}else{
-				rt_printf("Failed To open Log file\n");
-				//printf("rt_logging failed\n ");
-			}
+				//rt_log_message(LG_MSG, "rt_logging started");
+			}//else{
+			//	rt_printf("Failed To open Log file\n");
+			//	//printf("rt_logging failed\n ");
+			//}
 		}
 	}
 //****************Ended*****************************
@@ -213,9 +219,9 @@ get_realtime_clocks(struct timespec *pxeno)
 }
 
 int
-rt_fill_time_string(int n)
+rt_fill_time_string(FILE *rt_file_, int n)
 {
-	log_check();
+	//log_check();
 	//printf("rt_fill_time_string\n");
 	struct tm_rt t;
     struct timespec posix_real;
@@ -227,7 +233,7 @@ rt_fill_time_string(int n)
       rt_printf("%s: cannot read clocks\n", __FUNCTION__);
       exit(1);
     }
-    n += rt_fprintf(rt_file,"%s",asctime_rt(SecondsSinceEpochToDateTime(&t,posix_real.tv_sec,posix_real.tv_nsec)));
+    n += rt_fprintf(rt_file_,"%s",asctime_rt(SecondsSinceEpochToDateTime(&t,posix_real.tv_sec,posix_real.tv_nsec)));
     //rt_printf("%s", asctime(SecondsSinceEpochToDateTime(&t,posix_real.tv_sec)));
     //rt_printf("CASE3.3 \n");
     return n;
@@ -237,33 +243,41 @@ rt_fill_time_string(int n)
 }
 
 void
-_rt_log_message(int level, char *fmt, ...)
-{
+_rt_log_message(int level, char *fmt, ...){
+	va_list argp;
+	va_start(argp, fmt);
 	log_check();
+	__rt_log_message(rt_file ,level ,fmt, argp);
+	va_end(argp);
+}
+	
+void
+__rt_log_message(FILE *rt_file_ ,int level, char *fmt, va_list args)
+{
 	//printf("printf at Log message Printing Level %d\n",level);
 	//rt_printf("at Log message Printing Level %d\n",level);
     int n=0;
     //char *msg;
-    va_list args;
+    //va_list args;
    // char time_string[TIME_LENGTH];
     //char str[STRING_LENGTH];
 
     assert(level <= rt_log_level);
-    va_start(args, fmt);
+    //va_start(args, fmt);
     rt_print_auto_init(1);
 	//asctime(SecondsSinceEpochToDateTime(&t, (t/1000000000)))
 	//rt_printf("CASE2 \n");
 	//rt_fprintf(rt_file,"\nBy Real Real Time by log_rt:: 1 number of bytes : %d \n",a);
-    n += rt_fprintf(rt_file, "%-9s ",   log_string[level]);
+    n += rt_fprintf(rt_file_, "%-9s ",   log_string[level]);
 	//rt_printf("CASE3 \n");
-    n += rt_fill_time_string(n);
+    n += rt_fill_time_string(rt_file_ , n);
     //rt_printf("CASE4 \n");
-    n += rt_fprintf(rt_file, " [%s:%lu]: ", log_ident_rt, (long int) getpid());
+    n += rt_fprintf(rt_file_, " [%s:%lu]: ", log_ident_rt, (long int) getpid());
 
     //msg = str + n;
-    n  += rt_vfprintf(rt_file, fmt, args);
+    n  += rt_vfprintf(rt_file_, fmt, args);
     //printf("\n  New Size %d\n" , snprintf(str, STRING_LENGTH, "\n "));
-    n += rt_fprintf(rt_file, "\n");
+    n += rt_fprintf(rt_file_, "\n");
     /* maximum size that could be filled in str will be STRING_LENGTH,
      * now if vsnprintf has overflown, it will return a value greater
      * than this. So make it proper.

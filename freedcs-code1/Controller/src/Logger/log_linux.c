@@ -174,23 +174,32 @@ void linux_log_check(){
 			}
 		}
 	}
-	
+
 void
-_log_message(int level, char *fmt, ...)
-{
+_log_message(int level, char *fmt, ...){
+	va_list argp;
+	va_start(argp, fmt);
 	linux_log_check();
+	__log_message(log_file_fd, level, fmt, argp);
+	va_end(argp);
+}	
+
+
+void
+__log_message(int log_file_fd_, int level, char *fmt, va_list args)
+{
 	//Opening File for Logging !!!
 	//const char *log_file="/log/Controller.log";
 	//int fd = open_log_file(log_file);
 	// printf("at Log message Printing Level %d\n",level);
     int n;
     char *msg;
-    va_list args;
+    //va_list args;
     char time_string[TIME_LENGTH];
     char str[STRING_LENGTH];
 
     assert(level <= log_level);
-    va_start(args, fmt);
+    //va_start(args, fmt);
 
     fill_time_string(time_string, TIME_LENGTH);
 
@@ -213,10 +222,10 @@ _log_message(int level, char *fmt, ...)
 	n = STRING_LENGTH-1;
     }
     // printf("Final Dtring going to log with byte Size %d at FD :%d  \n%s\n",n,log_file_fd,str);
-    write(log_file_fd, str, n);
+    write(log_file_fd_, str, n);
     char new_line[1];
     new_line[0]='\n';
-    write(log_file_fd, new_line, 1);
+    write(log_file_fd_, new_line, 1);
 
     va_end(args);
 }

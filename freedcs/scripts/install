@@ -161,6 +161,7 @@ function build_i386(){
 		exit;
 	fi
 	echo  -e "Testing Xenomai\n";
+	sleep 3
 	if [[  Xenomai_Install -lt 1  ]]; then
 		echo -e "Installing Xenomai\n";
 		sleep 1

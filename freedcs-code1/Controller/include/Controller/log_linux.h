@@ -53,6 +53,7 @@ extern void toggle_log_level();
 
 extern int log_level;
 extern void _log_message(int, char*, ...) __attribute__((format(printf, 2, 3)));
+extern void __log_message(int log_file_fd_, int level, char *fmt, va_list args);
 #define log_message(level, arg...) \
 	(level) > log_level ? (void)0: _log_message(level, arg);	
 
