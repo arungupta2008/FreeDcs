@@ -51,6 +51,7 @@ log2 : log_client.o
 log3 : logd
 logd : logd
 liblog : liblog.so log_rt_client logd
+rt_time : rt_time
 pr:pr
 engstatcom: engstatcom.o statcom.o $(OBJS)
 	$(CC) $(LXRT_CFLAGS) $(LXRT_LDFLAGS) -o engstatcom engstatcom.o $(OBJS) -rdynamic -lcrypto -lssl

@@ -1,0 +1,34 @@
+Hello Guys here you will know about how build is created. 
+
+
+First you need to know some important folder for creating build 
+
+every file not present in github account, i will update these files.
+
+
+all forders under FreeDcs/freedcs/
+
+/build : this is the heart of OS. It contains many files like toolchain for cross compilation. You can find out two/one folers under it like arm or i386. As the folder says particular folder used for creating build for particular build arm or i386. under both you will find the buildroot folder. 
+
+Rememeber this,  under /buildroot folder there is a hidden file (.config only for i386 and for ARM file name is mini2440_defconfig it's not in hidden mode). 
+
+If you want to make a new build just go under folder buildroot and run "make". This is only for your information don't run i have made this automated.
+
+/common is folder that contains some files needed by both ARM or i386. These are Xenomai file our RTOS
+
+Now you can see some files like 
+
+/install file : this is the most important file this actually creates the build then vmdk disk for testing (not for ARM only from i386). Actually setups everything creates build (rootfs)(under build/i386/buildroot-2011.11/output/ same for both), creates VMDK disk, Setups Xenomai for your local machine and runs controller code for you. I know all this things are making you little confusing but these are important.  
+
+all other files like test_packages and imagetovmdk are used by install scripts. 
+
+in short you only have to clone FreeDcs go under freedcs just run ./setup_build_env.sh
+this will setup whole freedcs, in the same folder (FreeDcs/freedcs) you will see a file ./install just run it. 
+ 
+home/arun/FreeDcs/freedcs/$ ./install 
+
+First it will try to check required packages then it will ask for some customise options. 
+many options just once run that script you will get it. 
+
+Note : Please make sure you have ubuntu machine.
+

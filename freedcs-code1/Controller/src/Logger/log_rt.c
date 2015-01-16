@@ -3,10 +3,25 @@
 typedef unsigned uint;
 typedef unsigned long long uint64;
 
+
+/*
+ * Modified standard because it does not use tm_milisec 
+ * */
+struct tm_rt {
+   int tm_milisec;   /*Mili seconds ranges from 0 1000   */
+   int tm_sec;         /* seconds,  range 0 to 59          */
+   int tm_min;         /* minutes, range 0 to 59           */
+   int tm_hour;        /* hours, range 0 to 23             */
+   int tm_mday;        /* day of the month, range 1 to 31  */
+   int tm_mon;         /* month, range 0 to 11             */
+   int tm_year;        /* The number of years since 1900   */
+   int tm_wday;        /* day of the week, range 0 to 6    */
+   int tm_yday;        /* day in the year, range 0 to 365  */
+   int tm_isdst;       /* daylight saving time             */
+};
 /*
  * For Realtime LOG file OPEN and CLOSE Only Please don't touch
  * */
-
 int 
 open_rt_file(const char *path){
 	rt_file = fopen (path,"a+");
@@ -43,7 +58,7 @@ void log_check(){
 	}
 //****************Ended*****************************
 
-char *asctime_rt(const struct tm *timeptr){
+char *asctime_rt(const struct tm_rt *timeptr){
     static char wday_name[7][3] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
     };
@@ -54,15 +69,15 @@ char *asctime_rt(const struct tm *timeptr){
     static char result[26];
 
 
-    sprintf(result, "%.3s%3d %.2d:%.2d:%.2d ",
+    sprintf(result, "%.3s %02d %02d:%02d:%02d:%03d ",
         mon_name[timeptr->tm_mon],
         timeptr->tm_mday, timeptr->tm_hour,
-        timeptr->tm_min, timeptr->tm_sec);
+        timeptr->tm_min, timeptr->tm_sec,timeptr->tm_milisec);
     return result;
 }
 
-struct tm* SecondsSinceEpochToDateTime(struct tm* pTm, uint64 SecondsSinceEpoch){
-  uint64 sec;
+struct tm_rt* SecondsSinceEpochToDateTime(struct tm_rt* pTm, uint64 SecondsSinceEpoch , uint64 NanoSecSinceEpoc){
+  uint64 sec,miliSec,microSec;
   uint quadricentennials, centennials, quadrennials, annuals/*1-ennial?*/;
   uint year, leap;
   uint yday, hour, min;
@@ -107,6 +122,10 @@ struct tm* SecondsSinceEpochToDateTime(struct tm* pTm, uint64 SecondsSinceEpoch)
   // Re-bias from 1970 to 1601:
   // 1970 - 1601 = 369 = 3*100 + 17*4 + 1 years (incl. 89 leap days) =
   // (3*100*(365+24/100) + 17*4*(365+1/4) + 1*365)*24*3600 seconds
+  // Calculating Mili Seconds
+  miliSec = (NanoSecSinceEpoc / 1000000) % 1000;
+  // Calculating  Micro Seconds 
+  //microSec = (SecondsSinceEpoch / 1000) % 1000;
   sec = SecondsSinceEpoch + 11644473600;
 
   wday = (uint)((sec / 86400 + 1) % 7); // day of week
@@ -166,6 +185,7 @@ struct tm* SecondsSinceEpochToDateTime(struct tm* pTm, uint64 SecondsSinceEpoch)
 
   // Fill in C's "struct tm"
   memset(pTm, 0, sizeof(*pTm));
+  pTm->tm_milisec= miliSec;   // [0-999]
   pTm->tm_sec = sec;          // [0,59]
   pTm->tm_min = min;          // [0,59]
   pTm->tm_hour = hour;        // [0,23]
@@ -197,9 +217,9 @@ rt_fill_time_string(int n)
 {
 	log_check();
 	//printf("rt_fill_time_string\n");
-	struct tm t;
+	struct tm_rt t;
     struct timespec posix_real;
-    int retval=0;
+    uint64 retval=0;
     //rt_printf("CASE3.1 \n");
     retval = get_realtime_clocks(&posix_real);
     //rt_printf("CASE3.2 \n");
@@ -207,7 +227,7 @@ rt_fill_time_string(int n)
       rt_printf("%s: cannot read clocks\n", __FUNCTION__);
       exit(1);
     }
-    n += rt_fprintf(rt_file,"%s",asctime_rt(SecondsSinceEpochToDateTime(&t,posix_real.tv_sec)));
+    n += rt_fprintf(rt_file,"%s",asctime_rt(SecondsSinceEpochToDateTime(&t,posix_real.tv_sec,posix_real.tv_nsec)));
     //rt_printf("%s", asctime(SecondsSinceEpochToDateTime(&t,posix_real.tv_sec)));
     //rt_printf("CASE3.3 \n");
     return n;

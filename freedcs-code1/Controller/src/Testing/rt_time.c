@@ -200,6 +200,7 @@ void demo(void *arg){
 		micro = (t / 1000) % 1000;
 		milli = (t / 1000000) % 1000;
 		s = (t / 1000000000) % 60;
+		rt_printf("rt_timer_read : %lld",  t);
 		rt_printf("\nReal Time ::   %s\n",   asctime(SecondsSinceEpochToDateTime(&t, (t/1000000000))));
 		FILE *file,*file1;
 		file = fopen ("res","a+");

@@ -18,16 +18,36 @@ static int configured_log_level=0;
  */
 extern int biggest_fd;
 
+typedef unsigned long int uint64;
+
+// Get Xenomai and Linux realtime clocks.
+// return 0 on success and -1 otherwise.
 int
-fill_time_string(char *time_string, int len)
-{
+get_realtime_clocks_(struct timespec *pxeno){
+    if (clock_gettime(CLOCK_REALTIME, pxeno) != 0) {
+      rt_printf("%s: error clock_gettime\n", __FUNCTION__);
+      return -1;
+    }
+    //rt_printf("CASE3.2.1 \n");
+    return 0;
+}
+
+int
+fill_time_string(char *time_string, int len){
     time_t nowtime;
     struct tm result;
-    
+    char int_time_string[len]; 
+    struct timespec Linux_Time; // in Nano sec;
+	if(get_realtime_clocks_(&Linux_Time)!= 0) {
+      printf("%s: error clock_gettime\n", __FUNCTION__);
+    }
+    uint64 miliSec = (Linux_Time.tv_nsec / 1000000) % 1000 ;
     nowtime = time(NULL);
     /* Format is month day hour:minute:second (24 time) */
-    return strftime(time_string, len, "%b %d %H:%M:%S ",
+    strftime(int_time_string, len, "%b %d %H:%M:%S",
 	     localtime_r(&nowtime, &result));
+	return snprintf(time_string, len, "%s:%03d ", int_time_string, miliSec); 
+	
 }
 
 /*
